@@ -7,12 +7,12 @@ def call(buildDir, dockerRepoName, imageName, portNum) {
         stages {
         stage('Build') {
             steps {
-            sh 'pip install -r ./${buildDir}/requirements.txt'
+            sh "pip install -r ./${buildDir}/requirements.txt"
             }
         }
         stage('Python Lint') {
             steps {
-            sh 'pylint-fail-under --fail_under 5 ./${buildDir}/*.py'
+            sh "pylint-fail-under --fail_under 5 ./${buildDir}/*.py"
             }
         }
         stage('Package') {
@@ -31,11 +31,11 @@ def call(buildDir, dockerRepoName, imageName, portNum) {
         }
         stage('Zip Artifacts') {
             steps {
-                sh 'zip ${imageName}_app.zip ./${buildDir}/*.py'
+                sh "zip ${imageName}_app.zip ./${buildDir}/*.py"
             }
             post {
             always {
-                archiveArtifacts artifacts: '${imageName}_app.zip'
+                archiveArtifacts artifacts: "${imageName}_app.zip"
             }
             }
         }
