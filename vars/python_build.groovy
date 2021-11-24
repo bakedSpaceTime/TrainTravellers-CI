@@ -1,4 +1,4 @@
-def call(dockerRepoName, imageName, portNum) {
+def call(buildDir, dockerRepoName, imageName, portNum) {
     pipeline {
     agent any
         parameters {
@@ -7,34 +7,12 @@ def call(dockerRepoName, imageName, portNum) {
         stages {
         stage('Build') {
             steps {
-            sh 'pip install -r requirements.txt'
+            sh 'pip install -r ./${buildDir}/requirements.txt'
             }
         }
         stage('Python Lint') {
             steps {
-            sh 'pylint-fail-under --fail_under 5 *.py'
-            }
-        }
-        stage('Unit Test') {
-            steps {
-            script{
-                def filelist = findFiles(glob: 'test*.py')
-                for (int i = 0; i < filelist.size(); i++) {
-                def filename = filelist[i]
-                sh "coverage run --omit */site-packages/*,*/dist-packages/* ${filename}"
-                }
-            }
-            }
-            post {
-            always {
-                sh 'coverage report'
-                script {
-                    def test_reports_exist = fileExists 'test-reports'
-                    if (test_reports_exist) {
-                        junit 'test-reports/*.xml'
-                    }
-                }
-            }
+            sh 'pylint-fail-under --fail_under 5 ./${buildDir}/*.py'
             }
         }
         stage('Package') {
@@ -44,20 +22,20 @@ def call(dockerRepoName, imageName, portNum) {
                 }
             }
             steps {
-                withCredentials([string(credentialsId: 'DockerHub', variable: 'TOKEN')]) {
-                    sh "docker login -u 'ncrooks' -p '$TOKEN' docker.io"
-                    sh "docker build -t ${dockerRepoName}:latest --tag ncrooks/${dockerRepoName}:${imageName} ."
-                    sh "docker push ncrooks/${dockerRepoName}:${imageName}"
+                withCredentials([string(credentialsId: '5b19aa88-663b-4267-8695-1c88fcf30492', variable: 'TOKEN')]) {
+                    sh "docker login -u 'bakedspacetime' -p '$TOKEN' docker.io"
+                    sh "docker build -t ${dockerRepoName}:latest --tag bakedspacetime/${dockerRepoName}:${imageName} ./${buildDir}"
+                    sh "docker push bakedspacetime/${dockerRepoName}:${imageName}"
                 }
             }
         }
         stage('Zip Artifacts') {
             steps {
-                sh 'zip app.zip *.py'
+                sh 'zip ${imageName}_app.zip ./${buildDir}/*.py'
             }
             post {
             always {
-                archiveArtifacts artifacts: 'app.zip'
+                archiveArtifacts artifacts: '${imageName}_app.zip'
             }
             }
         }
