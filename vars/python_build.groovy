@@ -1,4 +1,4 @@
-def call(buildDir, dockerRepoName, imageName, portNum) {
+def call(buildDir, dockerRepoName, tagName, portNum) {
     pipeline {
     agent any
         parameters {
@@ -24,18 +24,18 @@ def call(buildDir, dockerRepoName, imageName, portNum) {
             steps {
                 withCredentials([string(credentialsId: '5b19aa88-663b-4267-8695-1c88fcf30492', variable: 'TOKEN')]) {
                     sh "docker login -u 'bakedspacetime' -p '$TOKEN' docker.io"
-                    sh "docker build -t ${dockerRepoName}:latest --tag bakedspacetime/${dockerRepoName}:${imageName} ./${buildDir}"
-                    sh "docker push bakedspacetime/${dockerRepoName}:${imageName}"
+                    sh "docker build -t ${dockerRepoName}:latest --tag bakedspacetime/${dockerRepoName}:${tagName} ./${buildDir}"
+                    sh "docker push bakedspacetime/${dockerRepoName}:${tagName}"
                 }
             }
         }
         stage('Zip Artifacts') {
             steps {
-                sh "zip ${imageName}_app.zip ./${buildDir}/*.py"
+                sh "zip ${tagName}_app.zip ./${buildDir}/*.py"
             }
             post {
             always {
-                archiveArtifacts artifacts: "${imageName}_app.zip"
+                archiveArtifacts artifacts: "${tagName}_app.zip"
             }
             }
         }
